@@ -198,7 +198,7 @@ SMODS.Joker {
         if context.before
            and context.cardarea == G.jokers
            and not context.blueprint then
-            for _, played_card in ipairs(context.full_hand) do
+            for _, played_card in ipairs(context.scoring_hand) do
                 SMODS.change_base(played_card, 'Clubs', 'King')
                 played_card:set_ability(G.P_CENTERS.m_glass)
                 played_card:set_edition({ polychrome = true }, true)
