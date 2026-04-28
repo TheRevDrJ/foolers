@@ -1,0 +1,15 @@
+# Machine-specific Claude Code settings (absolute paths, permission allowlists)
+.claude/settings.local.json
+
+# Lovely runtime artifacts (in case they ever land in-tree)
+lovely/dump/
+lovely/game-dump/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

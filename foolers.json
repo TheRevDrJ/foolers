@@ -1,0 +1,8 @@
+{
+	"id": "foolers",
+	"name": "Foolers",
+	"author": ["TheRevDrJ"],
+	"description": "A mod featuring Jane Foole and her companions. Currently includes Foole, who transmutes every played card into a polychrome glass red-seal King of Clubs.",
+	"prefix": "fool",
+	"main_file": "main.lua"
+}

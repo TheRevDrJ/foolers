@@ -1,0 +1,43 @@
+[manifest]
+version = "1.0.0"
+priority = 0
+
+# Foolers mod fix: when a custom Steamodded joker is in the deck, the
+# Wheel of Fortune (and Ectoplasm/Hex) capture `temp_pool = self.eligible_strength_jokers`
+# at consumable-use time. The list is populated by the consumable's own
+# Card:update tick, which has not always run by use-time. The deferred event
+# 0.4s later then sees an empty list, pseudorandom_element returns nil, and
+# eligible_card:set_edition crashes.
+#
+# Fix: re-read self.eligible_strength_jokers (or eligible_editionless_jokers)
+# inside the deferred event so we use the current state, not the empty
+# snapshot from use-time.
+#
+# Defensive fallback: if the list is still empty when the event fires
+# (genuinely no eligible jokers), skip set_edition rather than crash.
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "local eligible_card = pseudorandom_element(temp_pool, pseudoseed("
+position = "before"
+match_indent = true
+payload = """
+-- foolers fix: refresh the pool in case it was empty at use-time.
+if self.ability.name == 'The Wheel of Fortune' then
+    temp_pool = self.eligible_strength_jokers or temp_pool
+elseif self.ability.name == 'Ectoplasm' or self.ability.name == 'Hex' then
+    temp_pool = self.eligible_editionless_jokers or temp_pool
+end
+"""
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "eligible_card:set_edition(edition, true)"
+position = "before"
+match_indent = true
+payload = """
+-- foolers fix: silently skip if no eligible joker was found.
+if not eligible_card then return true end
+"""
