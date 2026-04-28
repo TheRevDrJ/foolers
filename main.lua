@@ -176,7 +176,7 @@ SMODS.Joker {
     loc_txt = {
         name = "Foole",
         text = {
-            "Every played card becomes a",
+            "Every scored card becomes a",
             "{C:clubs}King of Clubs{} with",
             "{C:dark_edition}Polychrome{}, {C:attention}Glass{},",
             "and a {C:red}Red Seal{}"
