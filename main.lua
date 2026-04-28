@@ -59,6 +59,42 @@ local function start_juicing_if_ready(card)
     end
 end
 
+-- Re-evaluate debuff state on every playing card after Infant joins or
+-- leaves the joker row. set_debuff(false) is a *recalc*, not a force-clear:
+-- it runs all SMODS mod hooks, including our set_debuff below, which
+-- returns true for non-KoC playing cards while Infant is in jokers.
+local function recalc_playing_card_debuffs()
+    for _, area in ipairs({ G.deck, G.hand, G.play, G.discard }) do
+        if area and area.cards then
+            for _, c in pairs(area.cards) do
+                if c.playing_card then c:set_debuff(false) end
+            end
+        end
+    end
+end
+
+local function infant_in_play()
+    if not G.jokers or not G.jokers.cards then return false end
+    for _, j in pairs(G.jokers.cards) do
+        if j.config and j.config.center and j.config.center.key == "j_fool_foole_infant" then
+            return true
+        end
+    end
+    return false
+end
+
+-- Mod-level set_debuff hook. SMODS calls this for every card whose debuff
+-- state is being evaluated (Card:set_debuff in card.lua:674). Returning
+-- true forces the card debuffed; the standard X / dim shaders then render
+-- via card.lua:4941 the same way they do for boss-blind debuffs. The
+-- persistent state (vs. our old context.before approach) is what makes
+-- the visual actually show up — the in-scoring window was too brief.
+SMODS.current_mod.set_debuff = function(card)
+    if not card.playing_card then return false end
+    if not infant_in_play() then return false end
+    return card:get_id() ~= 13 or card.base.suit ~= "Clubs"
+end
+
 
 -- =============================================================================
 -- Stage 1: Foole (Infant). Only Kings of Clubs score.
@@ -86,7 +122,14 @@ SMODS.Joker {
     config = { extra = { can_graduate = false } },
 
     add_to_deck = function(self, card, from_debuff)
-        if not from_debuff then start_juicing_if_ready(card) end
+        if not from_debuff then
+            start_juicing_if_ready(card)
+            recalc_playing_card_debuffs()
+        end
+    end,
+
+    remove_from_deck = function(self, card, from_debuff)
+        if not from_debuff then recalc_playing_card_debuffs() end
     end,
 
     calculate = function(self, card, context)
@@ -94,32 +137,6 @@ SMODS.Joker {
             card.ability.extra.can_graduate = true
             start_juicing_if_ready(card)
             return { message = "Ready!", colour = G.C.GOLD, card = card }
-        end
-
-        if context.before
-           and context.cardarea == G.jokers
-           and not context.blueprint then
-            for _, played_card in ipairs(context.full_hand) do
-                if played_card:get_id() ~= 13 or played_card.base.suit ~= "Clubs" then
-                    played_card:set_debuff(true)
-                    if played_card.debuff then
-                        played_card.debuffed_by_blind = true
-                    end
-                    played_card.foole_infant_debuff = true
-                end
-            end
-        end
-
-        if context.after
-           and context.cardarea == G.jokers
-           and not context.blueprint then
-            for _, played_card in ipairs(context.full_hand) do
-                if played_card.foole_infant_debuff then
-                    played_card.debuffed_by_blind = false
-                    played_card:set_debuff(false)
-                    played_card.foole_infant_debuff = nil
-                end
-            end
         end
 
         if context.selling_self
