@@ -1,27 +1,30 @@
-"""Convert a source joker artwork into Balatro's two required sprite sizes.
+"""Convert a source artwork into Balatro's required sprite sizes.
 
-Reads a single image (PNG/JPG, any size, with or without rounded-corner
-background), crops to the card body, makes the rounded corners transparent
-via tolerance flood-fill from each corner, then writes both 1x (71x95) and
-2x (142x190) versions using Lanczos resampling.
+Joker mode (default): crops to the card body, makes rounded corners
+transparent, writes 71x95 (1x) and 142x190 (2x) to assets/{1x,2x}/j_<key>.png.
+
+Icon mode (--icon): skips the crop (preserves the framed icon as drawn),
+makes corners transparent, writes 32x32 (1x) and 64x64 (2x) to
+assets/{1x,2x}/modicon.png.
 
 Usage:
-    python tools/process_art.py <source>                # writes j_foole.png
-    python tools/process_art.py <source> <key>          # writes j_<key>.png
+    python tools/process_art.py <source>                # j_foole.png
+    python tools/process_art.py <source> <key>          # j_<key>.png
+    python tools/process_art.py --icon <source>         # modicon.png
 
 Examples:
     python tools/process_art.py infant.jpg foole_infant
-    python tools/process_art.py child.jpg  foole_child
-    python tools/process_art.py adult.jpg  foole
+    python tools/process_art.py --icon foole-icon.png
 """
 
 import sys
 from pathlib import Path
 from PIL import Image, ImageDraw
 
-# Balatro sprite dimensions
-SIZE_1X = (71, 95)
-SIZE_2X = (142, 190)
+JOKER_SIZE_1X = (71, 95)
+JOKER_SIZE_2X = (142, 190)
+ICON_SIZE_1X = (32, 32)
+ICON_SIZE_2X = (64, 64)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -80,37 +83,49 @@ def make_corners_transparent(img):
 
 
 def main():
-    if len(sys.argv) not in (2, 3):
+    args = sys.argv[1:]
+    icon_mode = False
+    if args and args[0] == "--icon":
+        icon_mode = True
+        args = args[1:]
+    if len(args) not in (1, 2):
         print(__doc__)
         sys.exit(1)
-    src = Path(sys.argv[1])
-    key = sys.argv[2] if len(sys.argv) == 3 else "foole"
+    src = Path(args[0])
     if not src.exists():
         print(f"Source not found: {src}")
         sys.exit(1)
 
-    out_1x = PROJECT_ROOT / "assets" / "1x" / f"j_{key}.png"
-    out_2x = PROJECT_ROOT / "assets" / "2x" / f"j_{key}.png"
+    if icon_mode:
+        size_1x, size_2x = ICON_SIZE_1X, ICON_SIZE_2X
+        out_1x = PROJECT_ROOT / "assets" / "1x" / "modicon.png"
+        out_2x = PROJECT_ROOT / "assets" / "2x" / "modicon.png"
+    else:
+        key = args[1] if len(args) == 2 else "foole"
+        size_1x, size_2x = JOKER_SIZE_1X, JOKER_SIZE_2X
+        out_1x = PROJECT_ROOT / "assets" / "1x" / f"j_{key}.png"
+        out_2x = PROJECT_ROOT / "assets" / "2x" / f"j_{key}.png"
 
     print(f"Loading {src} ...")
     img = Image.open(src)
     print(f"  source size: {img.size}, mode: {img.mode}")
 
-    print("Cropping to card body ...")
-    img = crop_to_card(img)
-    print(f"  cropped size: {img.size}")
+    if not icon_mode:
+        print("Cropping to card body ...")
+        img = crop_to_card(img)
+        print(f"  cropped size: {img.size}")
 
     print("Making rounded corners transparent ...")
     img = make_corners_transparent(img)
 
-    print(f"Resizing to {SIZE_2X} (2x) ...")
+    print(f"Resizing to {size_2x} (2x) ...")
     out_2x.parent.mkdir(parents=True, exist_ok=True)
-    img.resize(SIZE_2X, Image.LANCZOS).save(out_2x)
+    img.resize(size_2x, Image.LANCZOS).save(out_2x)
     print(f"  wrote {out_2x}")
 
-    print(f"Resizing to {SIZE_1X} (1x) ...")
+    print(f"Resizing to {size_1x} (1x) ...")
     out_1x.parent.mkdir(parents=True, exist_ok=True)
-    img.resize(SIZE_1X, Image.LANCZOS).save(out_1x)
+    img.resize(size_1x, Image.LANCZOS).save(out_1x)
     print(f"  wrote {out_1x}")
 
     print("Done.")

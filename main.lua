@@ -4,6 +4,15 @@
 sendInfoMessage("Foolers loaded.", "Foolers")
 
 
+-- Mod icon shown on the Foolers card in the Mods menu. SMODS looks for
+-- an atlas with key "modicon" (or "<prefix>_modicon") at draw time.
+SMODS.Atlas {
+    key = "modicon",
+    path = "modicon.png",
+    px = 32,
+    py = 32
+}
+
 -- Atlas for the Foole sprite. Steamodded auto-loads assets/1x and assets/2x
 -- using the same filename in each. px/py are the @1x sprite dimensions.
 SMODS.Atlas {
