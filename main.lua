@@ -129,7 +129,7 @@ SMODS.Joker {
     cost = 6,
     unlocked = true,
     discovered = true,
-    blueprint_compat = false,
+    blueprint_compat = true,
     eternal_compat = false,
     perishable_compat = false,
     config = { extra = { can_graduate = false } },
@@ -144,7 +144,6 @@ SMODS.Joker {
 
         if context.repetition
            and context.cardarea == G.play
-           and not context.blueprint
            and context.other_card:get_id() == 13
            and context.other_card.base.suit == "Clubs" then
             return {
