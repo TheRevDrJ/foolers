@@ -44,6 +44,21 @@ local function defeated_boss_this_round(context)
        and G.GAME.blind.boss
 end
 
+-- Wiggle the card while it's eligible to graduate. Pattern matches vanilla
+-- Invisible Joker (card.lua:3315) which calls juice_card_until once the
+-- count hits its threshold. The card.foole_juicing flag prevents stacking
+-- juice loops if we're called twice in a session. Flag isn't persisted, so
+-- a save/reload re-arms it via add_to_deck.
+local function start_juicing_if_ready(card)
+    if card.ability.extra.can_graduate and not card.foole_juicing then
+        card.foole_juicing = true
+        local eval = function(c)
+            return c.ability.extra.can_graduate and not c.REMOVED and c.foole_juicing
+        end
+        juice_card_until(card, eval, true)
+    end
+end
+
 
 -- =============================================================================
 -- Stage 1: Foole (Infant). Only Kings of Clubs score.
@@ -70,9 +85,14 @@ SMODS.Joker {
     perishable_compat = false,
     config = { extra = { can_graduate = false } },
 
+    add_to_deck = function(self, card, from_debuff)
+        if not from_debuff then start_juicing_if_ready(card) end
+    end,
+
     calculate = function(self, card, context)
         if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
             card.ability.extra.can_graduate = true
+            start_juicing_if_ready(card)
             return { message = "Ready!", colour = G.C.GOLD, card = card }
         end
 
@@ -140,9 +160,14 @@ SMODS.Joker {
 
     in_pool = function(self, args) return false end,
 
+    add_to_deck = function(self, card, from_debuff)
+        if not from_debuff then start_juicing_if_ready(card) end
+    end,
+
     calculate = function(self, card, context)
         if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
             card.ability.extra.can_graduate = true
+            start_juicing_if_ready(card)
             return { message = "Ready!", colour = G.C.GOLD, card = card }
         end
 
@@ -212,3 +237,35 @@ SMODS.Joker {
         end
     end
 }
+
+
+-- =============================================================================
+-- JokerDisplay integration. No-op if the JokerDisplay mod isn't loaded.
+-- Mirrors vanilla Invisible Joker's pattern (Definitions[j_invisible]):
+-- shows "(0/1)" in inactive grey before boss defeat, "(Active!)" in green
+-- once the joker is ready to graduate.
+-- =============================================================================
+if JokerDisplay and JokerDisplay.Definitions then
+    local function progression_display()
+        return {
+            reminder_text = {
+                { text = "(" },
+                { ref_table = "card.joker_display_values", ref_value = "active" },
+                { text = ")" },
+            },
+            calc_function = function(card)
+                local ready = card.ability.extra and card.ability.extra.can_graduate or false
+                card.joker_display_values.is_active = ready
+                card.joker_display_values.active = ready and localize("jdis_active") or "0/1"
+            end,
+            style_function = function(card, text, reminder_text, extra)
+                if reminder_text and reminder_text.children and reminder_text.children[2] then
+                    reminder_text.children[2].config.colour =
+                        card.joker_display_values.is_active and G.C.GREEN or G.C.UI.TEXT_INACTIVE
+                end
+            end,
+        }
+    end
+    JokerDisplay.Definitions["j_fool_foole_infant"] = progression_display()
+    JokerDisplay.Definitions["j_fool_foole_child"] = progression_display()
+end
