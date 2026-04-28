@@ -6,9 +6,11 @@ A Balatro mod featuring **Jane Foole**, the Tudor-era court fool, and (eventuall
 
 | Stage | Rarity | Cost | Sell | In shop pool? | Effect |
 |-------|--------|------|------|---------------|--------|
-| Foole (Infant) | Uncommon | $6 | $3 | ✅ | Only Kings of Clubs score |
-| Foole (Child) | Rare | $8 | $4 | ❌ (graduation only) | Kings of Clubs retrigger when scored |
-| Foole (Adult) | Legendary | $20 | $10 | ❌ (graduation only) | Every scored card becomes a King of Clubs with Polychrome, Glass, and Red Seal |
+| Foole (Infant) | Common | $4 | $2 | ✅ | Only Kings of Clubs score |
+| Foole (Child) | Uncommon | $6 | $3 | ❌ (graduation only) | Kings of Clubs retrigger when scored |
+| Foole (Adult) | Rare | $8 | $4 | ❌ (graduation only) | Every scored card becomes a King of Clubs with Polychrome, Glass, and Red Seal |
+
+Adult is intentionally **Rare** rather than Legendary. Putting it in the Legendary pool would shift vanilla Legendary RNG (breaking known legendary seeds and conflicting with Brainstorm's instant-Perkeo feature), even with `in_pool = false` filtering it out of natural spawns.
 
 **Graduation:** While a stage is in your joker row, defeat any boss blind. The joker animates ("Ready!" appears, then starts wiggling continuously). Sell her — the next stage spawns in her slot.
 
