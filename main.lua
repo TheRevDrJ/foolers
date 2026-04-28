@@ -92,7 +92,10 @@ end
 SMODS.current_mod.set_debuff = function(card)
     if not card.playing_card then return false end
     if not infant_in_play() then return false end
-    return card:get_id() ~= 13 or card.base.suit ~= "Clubs"
+    -- is_suit(suit, bypass_debuff=true) sees through Wild Cards, Smeared
+    -- Joker, and other suit-mutators. Raw card.base.suit would mis-debuff
+    -- a Wild King even though it counts as a King of Clubs.
+    return not (card:get_id() == 13 and card:is_suit("Clubs", true))
 end
 
 
@@ -191,7 +194,7 @@ SMODS.Joker {
         if context.repetition
            and context.cardarea == G.play
            and context.other_card:get_id() == 13
-           and context.other_card.base.suit == "Clubs" then
+           and context.other_card:is_suit("Clubs") then
             return {
                 message = localize('k_again_ex'),
                 repetitions = 1,
