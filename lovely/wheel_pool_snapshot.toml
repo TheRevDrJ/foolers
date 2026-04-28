@@ -2,7 +2,7 @@
 version = "1.0.0"
 priority = 0
 
-# Foolers mod fix: when a custom Steamodded joker is in the deck, the
+# Foole mod fix: when a custom Steamodded joker is in the deck, the
 # Wheel of Fortune (and Ectoplasm/Hex) capture `temp_pool = self.eligible_strength_jokers`
 # at consumable-use time. The list is populated by the consumable's own
 # Card:update tick, which has not always run by use-time. The deferred event
@@ -23,7 +23,7 @@ pattern = "local eligible_card = pseudorandom_element(temp_pool, pseudoseed("
 position = "before"
 match_indent = true
 payload = """
--- foolers fix: refresh the pool in case it was empty at use-time.
+-- foole fix: refresh the pool in case it was empty at use-time.
 if self.ability.name == 'The Wheel of Fortune' then
     temp_pool = self.eligible_strength_jokers or temp_pool
 elseif self.ability.name == 'Ectoplasm' or self.ability.name == 'Hex' then
@@ -38,6 +38,6 @@ pattern = "eligible_card:set_edition(edition, true)"
 position = "before"
 match_indent = true
 payload = """
--- foolers fix: silently skip if no eligible joker was found.
+-- foole fix: silently skip if no eligible joker was found.
 if not eligible_card then return true end
 """

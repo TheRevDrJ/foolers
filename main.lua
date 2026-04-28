@@ -1,10 +1,10 @@
--- Foolers mod entry point.
--- Steamodded calls this file once at load, after parsing foolers.json.
+-- Foole mod entry point.
+-- Steamodded calls this file once at load, after parsing Foole.json.
 
-sendInfoMessage("Foolers loaded.", "Foolers")
+sendInfoMessage("Foole loaded.", "Foole")
 
 
--- Mod icon shown on the Foolers card in the Mods menu. SMODS looks for
+-- Mod icon shown on the Foole card in the Mods menu. SMODS looks for
 -- an atlas with key "modicon" (or "<prefix>_modicon") at draw time.
 SMODS.Atlas {
     key = "modicon",
