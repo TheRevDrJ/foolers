@@ -81,7 +81,10 @@ SMODS.Joker {
            and not context.blueprint then
             for _, played_card in ipairs(context.full_hand) do
                 if played_card:get_id() ~= 13 or played_card.base.suit ~= "Clubs" then
-                    played_card.debuff = true
+                    played_card:set_debuff(true)
+                    if played_card.debuff then
+                        played_card.debuffed_by_blind = true
+                    end
                     played_card.foole_infant_debuff = true
                 end
             end
@@ -92,7 +95,8 @@ SMODS.Joker {
            and not context.blueprint then
             for _, played_card in ipairs(context.full_hand) do
                 if played_card.foole_infant_debuff then
-                    played_card.debuff = false
+                    played_card.debuffed_by_blind = false
+                    played_card:set_debuff(false)
                     played_card.foole_infant_debuff = nil
                 end
             end
