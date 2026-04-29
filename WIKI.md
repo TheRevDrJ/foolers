@@ -1,6 +1,12 @@
 # Foole Wiki
 
-A Balatro mod featuring **Jane Foole**, the Tudor-era court fool, and (eventually) her companions. The headline mechanic is a **three-stage progression**: Foole arrives as an infant, and you have to keep her alive across two boss-blind defeats to reach her full power.
+A Balatro mod featuring two Tudor-era court fools: **Jane Foole** and **William Sommers**. Each has a three-stage progression — they arrive as infants, and you keep them alive across two boss-blind defeats to reach their full power. Each carves out a different "broken" axis at the endgame: Jane around per-card explosion and deck-conversion, Will around held-mult and deep-deck retention. Mechanically distinct, lore-paired.
+
+This wiki covers Jane first, then Will, then shared design philosophy.
+
+---
+
+# Jane Foole
 
 ## The progression at a glance
 
@@ -78,16 +84,102 @@ Glass cards have a 1/4 break chance per scoring. A fully-Foole'd deck slowly can
 
 Infant and Child can't be eternal because eternal blocks selling — and graduation requires selling. They can't be perishable because perishable destroys the joker on a timer, which would interrupt the progression. None of the three are blueprint-compatible: Infant's and Child's debuffs are idempotent under copy, and Adult's transmute is idempotent on already-transmuted cards.
 
-## Design philosophy
+---
+
+# William Sommers
+
+Henry VIII's primary court fool, paired with Jane Foole. Same three-stage shape as Jane, but built around the **Queen of Hearts** instead of the King of Clubs, with mechanically distinct punishment shapes at each stage and an endgame that inverts Jane's "play big" axis.
+
+## The progression at a glance
+
+| Stage | Rarity | Cost | Sell | In shop pool? | Effect |
+|-------|--------|------|------|---------------|--------|
+| Sommers (Infant) | Common | $4 | $2 | ✅ | Every scoring hand must include a Queen of Hearts. Otherwise, **this joker is destroyed.** |
+| Sommers (Child) | Uncommon | $6 | $3 | ❌ (graduation only) | Scoring hands still need a Queen of Hearts. Hand size is reduced by 1 per Queen of Hearts in your deck (minimum 1) |
+| Sommers (Adult) | Rare | $8 | $4 | ❌ (graduation only) | Every scored card becomes a Queen of Hearts with Polychrome, Steel, and a Red Seal |
+
+**Graduation:** Same as Jane — defeat any boss blind while a stage is in your joker row, then sell. Stage advances.
+
+## How to play
+
+### Pre-Sommers: build toward the Queen
+Before he shows up, look for ways to acquire Queen of Hearts cards:
+
+- **Strength tarot** — bumps a Jack of Hearts to a Queen of Hearts
+- **Death tarot** — rewrites one card into another, including into Q♥
+- **Standard packs** — hunt for the literal Queen of Hearts
+- **Sigil / Ouija spectrals** — make all cards same suit (force Hearts) or same rank (force Queen)
+- **Cryptid** — duplicates the most-recently-played card into your deck. Once you have a Q♥, copying her is the survival mechanism
+
+A vanilla deck has *one* Q♥. That's not enough for sustained Stage 1 play — you need redundancy.
+
+### With Infant: stay alive
+Every scoring hand must include a Queen of Hearts in the *scoring* portion (kickers don't count). If your played hand resolves with no Q♥ contributing to the poker hand type, **Sommers (Infant) is destroyed** — you've permanently lost the joker until you find another in a shop.
+
+The dance:
+1. Discard until you have a Q♥ in your draw
+2. Play her in a hand type where she actually scores (Pair of Queens, Flush of Hearts, Straight including her)
+3. Sometimes you'll exhaust your discards before drawing her — you have to play *some* hand or the round fails. If that hand has no scoring Q♥, Sommers dies.
+4. Survive to a boss blind, sell to graduate
+
+### With Child: pay the over-commitment tax
+Same Q♥-required rule, but the consequence softens — failing it yields a non-scoring hand, not a dead joker. The new pressure is mechanical rather than binary: **hand size is reduced by 1 for every Queen of Hearts in your deck.** Minimum hand size is 1 so you can always play High Card.
+
+This is where Stage 1's strategic puzzle bites both ways:
+
+- Built lightly (2–3 Q♥s): Stage 1 was hard, Stage 2 is manageable (hand of 5–6)
+- Built heavily (8+ Q♥s): Stage 1 was easy, Stage 2 cripples you (hand of 1)
+- And those Q♥s are *still in the deck*, drawing into your shrunken hand and clogging it
+
+The sweet spot exists somewhere between "barely survived Infant" and "all-in on Q♥". Finding it is the strategic puzzle.
+
+### With Adult: hold deep
+Adult transmutes every scored card into a Queen of Hearts with Polychrome (x1.5 mult on score), Steel (x1.5 mult while held in hand), and a Red Seal (retrigger when scored). Steel doesn't break — the deck stays at full size indefinitely. **No Cryptid sustainment needed.**
+
+The endgame insight: **playing small hands maximizes Steel held mult.** With hand size 8 and most cards converted to Steel Q♥s, playing a Pair (2 scoring) leaves 6 Steel Q♥s held → x1.5⁶ ≈ x11.4 from Steel alone, before any other multiplier. Adding Shoot the Moon (+13 mult per Queen held) puts +78 flat mult on top of that multiplier stack.
+
+This inverts standard Balatro and inverts Jane Foole's endgame: where Jane rewards *bigger* hands (more cards converted), Sommers rewards *smaller* hands (more cards held). The two characters operate on opposite axes.
+
+## Synergies
+
+- **Shoot the Moon** — +13 mult per Queen held in hand. With an all-Q♥ deck, every held card contributes. Headlining Sommers Adult synergy.
+- **Triboulet** — Kings and Queens give x2 mult when scored. Pure multiplier amplifier, same way it amplifies Jane's Adult.
+- **Mime** — retriggers held-in-hand effects. With Steel Q♥s held, Mime doubles each one's x1.5 contribution.
+- **Hanging Chad** — first played card retriggers twice. With Polychrome+Steel+Red Seal stacked on Adult-converted cards, three full scoring passes for the first card.
+- **Smeared Joker** — Hearts and Diamonds interchangeable, so Q♦ counts as Q♥ for Sommers' rules. Easier Stage 1 survival if you have it in play.
+
+## Edge cases
+
+- **Wild Cards:** A Wild Queen counts as a Queen of Hearts and satisfies the scoring requirement.
+- **Smeared:** Q♦ counts as Q♥ for the Stage 1/2 rules.
+- **Stone Cards:** No rank or suit. Cannot satisfy the Q♥ requirement, never count toward Sommers' rules.
+- **Save/reload:** Same persistent state as Jane. Graduation-ready flag persists, juicing resumes on load.
+
+## Compatibility flags
+
+|         | Blueprint | Eternal | Perishable |
+|---------|:---------:|:-------:|:----------:|
+| Infant  |     ❌    |    ❌   |     ❌     |
+| Child   |     ❌    |    ❌   |     ❌     |
+| Adult   |     ❌    |    ✅   |     ✅     |
+
+Identical reasoning to Jane — Eternal blocks selling, Perishable interrupts the progression timer, Blueprint is no-op or idempotent across all three stages.
+
+---
+
+# Design philosophy
 
 The mod is **tier-translation, not power-handout.** It promises an endgame fantasy — the kind of run where deck-conversion plus multiplier-stacking produces astronomical scores — but charges real currency for it:
 
-- **Joker slots:** Infant occupies a slot while being actively harmful
-- **RNG dependency:** Adult's transmute is a foundation, not a finished build; you still need supporting cast (Caino, Triboulet, Mime, Hanging Chad, Blueprint, Cryptid)
-- **Deck-construction commitment:** without Strength, Death, or specific pack pulls, Infant drowns you
-- **Self-destruct timer:** Glass break chance shrinks the deck over time
+- **Joker slots:** Each character's progression burns a slot for ~2 antes on something actively harmful (Infant) or constrained (Child).
+- **RNG dependency:** Adult forms are foundations, not finished builds. You still need supporting cast — Caino, Triboulet, Mime, Hanging Chad, Shoot the Moon, Blueprint — none guaranteed to spawn.
+- **Deck-construction commitment:** Without Strength, Death, Sigil/Ouija, or specific pack pulls, Stage 1 of either character drowns you.
+- **Per-character punishment shape:**
+  - Jane: Glass break chance shrinks the deck over time → Cryptid-or-die in endless mode
+  - Sommers: Heavy Q♥ commitment in Stage 1 → cripples hand size in Stage 2
+- **Joker death (Sommers only):** A single Q♥-less play in Stage 1 ends the run for that joker. No second chances.
 
-The math gets absurd. The run doesn't auto-pilot.
+These costs stack. The math gets absurd. The run doesn't auto-pilot.
 
 ---
 
