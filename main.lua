@@ -519,6 +519,52 @@ SMODS.Joker {
 -- shows "(0/1)" in inactive grey before boss defeat, "(Active!)" in green
 -- once the joker is ready to graduate.
 -- =============================================================================
+-- =============================================================================
+-- Pre-play warning for Sommers (Infant/Child). Vanilla shows a "Will Not
+-- Score" warning above the play area when the boss blind would debuff
+-- the highlighted hand (cardarea.lua:194 sets G.boss_throw_hand,
+-- game.lua:2604 builds the UIBox). We monkey-patch parse_highlighted
+-- to ALSO trip that flag — and override the message via SMODS.debuff_text
+-- and SMODS.hand_debuff_source — when Sommers' Q♥-required rule would
+-- fail on the current selection.
+--
+-- Defers to the boss if the boss is already debuffing the hand: don't
+-- stomp the boss message. The player will discover Sommers' fate on play.
+-- =============================================================================
+local _orig_parse_highlighted = CardArea.parse_highlighted
+function CardArea:parse_highlighted()
+    _orig_parse_highlighted(self)
+
+    if self ~= G.hand then return end
+    if not self.highlighted or #self.highlighted == 0 then return end
+    if G.boss_throw_hand then return end -- boss is already warning; don't stomp
+
+    local stage_key, stage_label
+    if joker_in_play("j_fool_sommers_infant") then
+        stage_key, stage_label = "j_fool_sommers_infant", "William will take his leave!"
+    elseif joker_in_play("j_fool_sommers_child") then
+        stage_key, stage_label = "j_fool_sommers_child", "No Queen of Hearts"
+    else
+        return
+    end
+
+    local text, _, poker_hands = G.FUNCS.get_poker_hand_info(self.highlighted)
+    if text == 'NULL' then return end
+    local scoring = poker_hands[text] and poker_hands[text][1]
+    if not scoring then return end
+    if scoring_hand_has_qoh(scoring) then return end
+
+    G.boss_throw_hand = true
+    SMODS.debuff_text = stage_label
+    for _, j in pairs(G.jokers.cards) do
+        if j.config and j.config.center and j.config.center.key == stage_key then
+            SMODS.hand_debuff_source = j
+            break
+        end
+    end
+end
+
+
 if JokerDisplay and JokerDisplay.Definitions then
     local function progression_display()
         return {
