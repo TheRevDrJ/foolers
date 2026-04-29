@@ -94,7 +94,7 @@ Henry VIII's primary court fool, paired with Jane Foole. Same three-stage shape 
 
 | Stage | Rarity | Cost | Sell | In shop pool? | Effect |
 |-------|--------|------|------|---------------|--------|
-| Sommers (Infant) | Common | $4 | $2 | ✅ | Every scoring hand must include a Queen of Hearts. Otherwise, **the hand will not score and this joker is destroyed.** |
+| Sommers (Infant) | Common | $4 | $2 | ✅ | Every scoring hand must include a Queen of Hearts. Otherwise, **the hand scores nothing and this joker is destroyed.** |
 | Sommers (Child) | Uncommon | $6 | $3 | ❌ (graduation only) | Scoring hands still need a Queen of Hearts. Hand size is reduced by 1 per Queen of Hearts in your deck (minimum 1) |
 | Sommers (Adult) | Rare | $8 | $4 | ❌ (graduation only) | Every scored card becomes a Queen of Hearts with Polychrome, Steel, and a Red Seal |
 
