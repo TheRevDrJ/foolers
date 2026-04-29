@@ -64,7 +64,7 @@ Adult transmutes every **scored** card into a King of Clubs with Polychrome (x1.
 
 ### Sustaining the build
 Glass cards have a 1/4 break chance per scoring. A fully-Foole'd deck slowly cannibalizes itself. To go deep into endless mode you need:
-- **Cryptid** (Cryptid mod spectral) — duplicates the most-recently-played card into your deck
+- **Cryptid** (vanilla spectral, *not* the Cryptid mod — different things despite the name clash) — creates 2 copies of a selected card in your hand. The copies stay in your deck after the round, which is what enables the sustainment loop. Pair with **Perkeo** (vanilla Legendary; creates a Negative copy of one of your consumables at end of shop) for a free re-use of Cryptid each round = +2 Glass Kings/round; add **Brainstorm** copying Perkeo for two Negative spectral copies per shop = +4 Glass Kings/round, enough to outpace Glass's 1/4-per-scoring break chance in endless mode.
 - **Ghost Deck** — starts with The Hex spectral and boosts spectral-pack rates, giving reliable Cryptid access
 
 ## Edge cases
@@ -109,7 +109,7 @@ Before he shows up, look for ways to acquire Queen of Hearts cards:
 - **Death tarot** — rewrites one card into another, including into Q♥
 - **Standard packs** — hunt for the literal Queen of Hearts
 - **Sigil / Ouija spectrals** — make all cards same suit (force Hearts) or same rank (force Queen)
-- **Cryptid** — duplicates the most-recently-played card into your deck. Once you have a Q♥, copying her is the survival mechanism
+- **Cryptid** (vanilla spectral) — creates 2 copies of a selected card in your hand; copies stay in your deck after the round. Once you have a Q♥, this is the redundancy engine. Pairs with Perkeo + Brainstorm for free Negative re-use each shop, same loop as Foole's.
 
 A vanilla deck has *one* Q♥. That's not enough for sustained Stage 1 play — you need redundancy.
 
