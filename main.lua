@@ -338,17 +338,29 @@ SMODS.Joker {
         if context.before
            and context.cardarea == G.jokers
            and not context.blueprint then
+            local transmuted_any = false
             for _, played_card in ipairs(context.scoring_hand) do
-                SMODS.change_base(played_card, 'Clubs', 'King')
-                played_card:set_ability(G.P_CENTERS.m_glass)
-                played_card:set_edition({ polychrome = true }, true)
-                played_card:set_seal('Red', true)
+                local already =
+                    played_card:get_id() == 13
+                    and played_card:is_suit("Clubs", true)
+                    and played_card.ability and played_card.ability.effect == 'Glass Card'
+                    and played_card.edition and played_card.edition.polychrome
+                    and played_card.seal == 'Red'
+                if not already then
+                    SMODS.change_base(played_card, 'Clubs', 'King')
+                    played_card:set_ability(G.P_CENTERS.m_glass)
+                    played_card:set_edition({ polychrome = true }, true)
+                    played_card:set_seal('Red', true)
+                    transmuted_any = true
+                end
             end
-            return {
-                message = "Transmuted!",
-                colour = G.C.GOLD,
-                card = card
-            }
+            if transmuted_any then
+                return {
+                    message = "Transmuted!",
+                    colour = G.C.GOLD,
+                    card = card
+                }
+            end
         end
     end
 }
@@ -542,17 +554,29 @@ SMODS.Joker {
         if context.before
            and context.cardarea == G.jokers
            and not context.blueprint then
+            local transmuted_any = false
             for _, played_card in ipairs(context.scoring_hand) do
-                SMODS.change_base(played_card, 'Hearts', 'Queen')
-                played_card:set_ability(G.P_CENTERS.m_steel)
-                played_card:set_edition({ polychrome = true }, true)
-                played_card:set_seal('Red', true)
+                local already =
+                    played_card:get_id() == 12
+                    and played_card:is_suit("Hearts", true)
+                    and played_card.ability and played_card.ability.effect == 'Steel Card'
+                    and played_card.edition and played_card.edition.polychrome
+                    and played_card.seal == 'Red'
+                if not already then
+                    SMODS.change_base(played_card, 'Hearts', 'Queen')
+                    played_card:set_ability(G.P_CENTERS.m_steel)
+                    played_card:set_edition({ polychrome = true }, true)
+                    played_card:set_seal('Red', true)
+                    transmuted_any = true
+                end
             end
-            return {
-                message = "Indeed!",
-                colour = G.C.GOLD,
-                card = card
-            }
+            if transmuted_any then
+                return {
+                    message = "Indeed!",
+                    colour = G.C.GOLD,
+                    card = card
+                }
+            end
         end
     end
 }
