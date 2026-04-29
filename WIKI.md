@@ -7,7 +7,7 @@ A Balatro mod featuring **Jane Foole**, the Tudor-era court fool, and (eventuall
 | Stage | Rarity | Cost | Sell | In shop pool? | Effect |
 |-------|--------|------|------|---------------|--------|
 | Foole (Infant) | Common | $4 | $2 | ✅ | Only Kings of Clubs score |
-| Foole (Child) | Uncommon | $6 | $3 | ❌ (graduation only) | Kings of Clubs retrigger when scored |
+| Foole (Child) | Uncommon | $6 | $3 | ❌ (graduation only) | Kings of Clubs are debuffed (the inverse of Infant) |
 | Foole (Adult) | Rare | $8 | $4 | ❌ (graduation only) | Every scored card becomes a King of Clubs with Polychrome, Glass, and Red Seal |
 
 Adult is intentionally **Rare** rather than Legendary. Putting it in the Legendary pool would shift vanilla Legendary RNG (breaking known legendary seeds and conflicting with Brainstorm's instant-Perkeo feature), even with `in_pool = false` filtering it out of natural spawns.
@@ -36,8 +36,8 @@ The dance:
 2. Convert at every opportunity (Strength, Death, suit-changers)
 3. Survive to a boss blind, then sell her
 
-### With Child: ramp
-The debuff is gone. Every card scores normally, and your Kings of Clubs **retrigger** — they each score twice. This is the honeymoon phase. Defeat another boss, sell, Adult arrives.
+### With Child: pivot
+The debuff inverts. The KoC-heavy deck you spent Infant phase building is now useless — every King of Clubs is debuffed and won't score. You have to win one round playing *around* the deck you previously played *around*. Defeat the boss blind with whatever non-KoC cards you still have, sell her, Adult arrives. The intentional design is that an over-efficient Infant phase punishes you here.
 
 ### With Adult: endgame
 Adult transmutes every **scored** card into a King of Clubs with Polychrome (x1.5 mult), Glass (x2 mult), and a Red Seal (retrigger once). The change is permanent — the card stays converted across rounds.
@@ -52,10 +52,9 @@ Adult transmutes every **scored** card into a King of Clubs with Polychrome (x1.
 - **Idol** — random rank/suit each round gets x2. With a uniform deck, Idol's "random pick" becomes deterministic.
 
 ### Retriggers
-- **Hanging Chad** — first played card retriggers twice. With Polychrome+Glass+RedSeal stacked, that's three full scoring passes for the first card.
+- **Hanging Chad** — first played card retriggers twice. With Polychrome+Glass+RedSeal stacked on Adult-converted cards, that's three full scoring passes for the first card.
 - **Mime** — retriggers held-in-hand effects. Pairs with Steel/Chariot enhancements on held Kings.
-- **Blueprint** — only **Child** is meaningfully blueprint-compatible. Copying Child = each KoC retriggers twice (3× total scoring). Infant and Adult are no-ops under copy.
-- **Brainstorm** — copies leftmost joker. Best target depends on what's leftmost.
+- **Blueprint / Brainstorm** — none of the Foole stages are blueprint-compatible. Infant's debuff is idempotent under copy, Child's debuff is idempotent under copy, Adult's transmute is idempotent on already-transmuted cards. All three report as incompatible.
 
 ### Sustaining the build
 Glass cards have a 1/4 break chance per scoring. A fully-Foole'd deck slowly cannibalizes itself. To go deep into endless mode you need:
@@ -74,10 +73,10 @@ Glass cards have a 1/4 break chance per scoring. A fully-Foole'd deck slowly can
 |         | Blueprint | Eternal | Perishable |
 |---------|:---------:|:-------:|:----------:|
 | Infant  |     ❌    |    ❌   |     ❌     |
-| Child   |     ✅    |    ❌   |     ❌     |
+| Child   |     ❌    |    ❌   |     ❌     |
 | Adult   |     ❌    |    ✅   |     ✅     |
 
-Infant and Child can't be eternal because eternal blocks selling — and graduation requires selling. They can't be perishable because perishable destroys the joker on a timer, which would interrupt the progression. Infant isn't blueprint-compatible because copying its debuff is idempotent (does nothing observable). Adult isn't blueprint-compatible because copying the transmute is also idempotent — already-transmuted cards stay transmuted.
+Infant and Child can't be eternal because eternal blocks selling — and graduation requires selling. They can't be perishable because perishable destroys the joker on a timer, which would interrupt the progression. None of the three are blueprint-compatible: Infant's and Child's debuffs are idempotent under copy, and Adult's transmute is idempotent on already-transmuted cards.
 
 ## Design philosophy
 

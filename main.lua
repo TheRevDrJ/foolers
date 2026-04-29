@@ -73,29 +73,40 @@ local function recalc_playing_card_debuffs()
     end
 end
 
-local function infant_in_play()
+local function joker_in_play(key)
     if not G.jokers or not G.jokers.cards then return false end
     for _, j in pairs(G.jokers.cards) do
-        if j.config and j.config.center and j.config.center.key == "j_fool_foole_infant" then
+        if j.config and j.config.center and j.config.center.key == key then
             return true
         end
     end
     return false
 end
 
+local function infant_in_play() return joker_in_play("j_fool_foole_infant") end
+local function child_in_play()  return joker_in_play("j_fool_foole_child")  end
+
 -- Mod-level set_debuff hook. SMODS calls this for every card whose debuff
 -- state is being evaluated (Card:set_debuff in card.lua:674). Returning
 -- true forces the card debuffed; the standard X / dim shaders then render
--- via card.lua:4941 the same way they do for boss-blind debuffs. The
--- persistent state (vs. our old context.before approach) is what makes
--- the visual actually show up — the in-scoring window was too brief.
+-- via card.lua:4941 the same way they do for boss-blind debuffs. Persistent
+-- state (vs. an in-scoring approach) is what makes the visual actually show
+-- up — the in-scoring window was too brief.
+--
+-- Infant debuffs every non-(King of Clubs).
+-- Child INVERTS that: KoCs themselves are debuffed. The deck the player
+-- spent Infant building toward becomes useless during Child, forcing
+-- one round of play around what they previously played around.
+-- If both stages are somehow in play (Showman, copies, etc.), the
+-- debuffs union — everything ends up debuffed.
 SMODS.current_mod.set_debuff = function(card)
     if not card.playing_card then return false end
-    if not infant_in_play() then return false end
     -- is_suit(suit, bypass_debuff=true) sees through Wild Cards, Smeared
-    -- Joker, and other suit-mutators. Raw card.base.suit would mis-debuff
-    -- a Wild King even though it counts as a King of Clubs.
-    return not (card:get_id() == 13 and card:is_suit("Clubs", true))
+    -- Joker, and other suit-mutators. Raw card.base.suit would miss them.
+    local is_koc = card:get_id() == 13 and card:is_suit("Clubs", true)
+    if infant_in_play() and not is_koc then return true end
+    if child_in_play()  and is_koc     then return true end
+    return false
 end
 
 
@@ -161,8 +172,7 @@ SMODS.Joker {
     loc_txt = {
         name = "Foole (Child)",
         text = {
-            "{C:clubs}Kings of Clubs{} retrigger",
-            "when scored",
+            "{C:clubs}Kings of Clubs{} are debuffed",
             "{C:inactive}Sell after defeating a boss",
             "{C:inactive}blind to grow up..."
         }
@@ -173,7 +183,7 @@ SMODS.Joker {
     cost = 6,
     unlocked = true,
     discovered = true,
-    blueprint_compat = true,
+    blueprint_compat = false,
     eternal_compat = false,
     perishable_compat = false,
     config = { extra = { can_graduate = false } },
@@ -181,7 +191,14 @@ SMODS.Joker {
     in_pool = function(self, args) return false end,
 
     add_to_deck = function(self, card, from_debuff)
-        if not from_debuff then start_juicing_if_ready(card) end
+        if not from_debuff then
+            start_juicing_if_ready(card)
+            recalc_playing_card_debuffs()
+        end
+    end,
+
+    remove_from_deck = function(self, card, from_debuff)
+        if not from_debuff then recalc_playing_card_debuffs() end
     end,
 
     calculate = function(self, card, context)
@@ -189,17 +206,6 @@ SMODS.Joker {
             card.ability.extra.can_graduate = true
             start_juicing_if_ready(card)
             return { message = "Ready!", colour = G.C.GOLD, card = card }
-        end
-
-        if context.repetition
-           and context.cardarea == G.play
-           and context.other_card:get_id() == 13
-           and context.other_card:is_suit("Clubs") then
-            return {
-                message = localize('k_again_ex'),
-                repetitions = 1,
-                card = card
-            }
         end
 
         if context.selling_self
