@@ -394,48 +394,24 @@ SMODS.Joker {
             return { message = "Ready!", colour = G.C.GOLD, card = card }
         end
 
-        -- Q♥-less hand: debuff every scoring card so the hand doesn't
-        -- score, AND mark each so context.after can clear them and trigger
-        -- our destruction. Doing the destroy in context.after lets us
-        -- clean up the debuff state first; if we destroyed Sommers in
-        -- context.before, the after hook wouldn't fire and the cards
-        -- would stay debuffed into next round.
-        if context.before
-           and context.cardarea == G.jokers
-           and not context.blueprint then
-            if not scoring_hand_has_qoh(context.scoring_hand) then
-                for _, played_card in ipairs(context.scoring_hand) do
-                    played_card:set_debuff(true)
-                    played_card.sommers_infant_debuff = true
-                end
-                return {
-                    message = "I take my leave!",
-                    colour = G.C.RED,
-                    card = card
-                }
-            end
-        end
-
-        if context.after
-           and context.cardarea == G.jokers
+        -- Q♥-less hand: hand was zeroed by our Blind:debuff_hand override,
+        -- and now context.debuffed_hand fires (state_events.lua:795).
+        -- Schedule self-destruction.
+        if context.debuffed_hand
            and not context.blueprint
-           and context.scoring_hand then
-            local marked = false
-            for _, played_card in ipairs(context.scoring_hand) do
-                if played_card.sommers_infant_debuff then
-                    played_card:set_debuff(false)
-                    played_card.sommers_infant_debuff = nil
-                    marked = true
+           and context.scoring_hand
+           and not scoring_hand_has_qoh(context.scoring_hand) then
+            G.E_MANAGER:add_event(Event({
+                func = function()
+                    SMODS.destroy_cards({card})
+                    return true
                 end
-            end
-            if marked then
-                G.E_MANAGER:add_event(Event({
-                    func = function()
-                        SMODS.destroy_cards({card})
-                        return true
-                    end
-                }))
-            end
+            }))
+            return {
+                message = "I take my leave!",
+                colour = G.C.RED,
+                card = card
+            }
         end
 
         if context.selling_self
@@ -517,31 +493,9 @@ SMODS.Joker {
             return { message = "Ready!", colour = G.C.GOLD, card = card }
         end
 
-        -- Soft failure: debuff every scoring card so nothing scores. The
-        -- visual is brief (only across the eval pass) but the score
-        -- behavior is the point — joker survives.
-        if context.before
-           and context.cardarea == G.jokers
-           and not context.blueprint then
-            if not scoring_hand_has_qoh(context.scoring_hand) then
-                for _, played_card in ipairs(context.scoring_hand) do
-                    played_card:set_debuff(true)
-                    played_card.sommers_child_debuff = true
-                end
-            end
-        end
-
-        if context.after
-           and context.cardarea == G.jokers
-           and not context.blueprint
-           and context.scoring_hand then
-            for _, played_card in ipairs(context.scoring_hand) do
-                if played_card.sommers_child_debuff then
-                    played_card:set_debuff(false)
-                    played_card.sommers_child_debuff = nil
-                end
-            end
-        end
+        -- Q♥-less hand: zeroed by our Blind:debuff_hand override. No
+        -- destruction (Child survives the failure), no card-level
+        -- debuffing here — the hand-level debuff handles everything.
 
         if context.selling_self
            and not context.blueprint
@@ -611,48 +565,44 @@ SMODS.Joker {
 -- once the joker is ready to graduate.
 -- =============================================================================
 -- =============================================================================
--- Pre-play warning for Sommers (Infant/Child). Vanilla shows a "Will Not
--- Score" warning above the play area when the boss blind would debuff
--- the highlighted hand (cardarea.lua:194 sets G.boss_throw_hand,
--- game.lua:2604 builds the UIBox). We monkey-patch parse_highlighted
--- to ALSO trip that flag — and override the message via SMODS.debuff_text
--- and SMODS.hand_debuff_source — when Sommers' Q♥-required rule would
--- fail on the current selection.
+-- Hand-level debuff for Sommers (Infant/Child). Monkey-patches
+-- Blind:debuff_hand to also return true when Sommers is in jokers and
+-- the scoring portion has no Queen of Hearts. This:
+--   1. Forces the hand to score nothing (state_events.lua:612 zeroes
+--      mult and chips when debuff_hand returns true — same path the
+--      Psychic boss uses).
+--   2. Triggers context.debuffed_hand for our calculate hooks
+--      (state_events.lua:795). Sommers Infant uses this to destroy
+--      himself on a Q♥-less play.
+--   3. Sets G.boss_throw_hand via the existing parse_highlighted check
+--      (cardarea.lua:194), so the pre-play warning UI lights up just
+--      like a boss-debuffed hand.
 --
--- Defers to the boss if the boss is already debuffing the hand: don't
--- stomp the boss message. The player will discover Sommers' fate on play.
+-- Defers to the boss: vanilla check runs first, and if the boss is
+-- already debuffing we don't stomp its result.
 -- =============================================================================
-local _orig_parse_highlighted = CardArea.parse_highlighted
-function CardArea:parse_highlighted()
-    _orig_parse_highlighted(self)
+local _orig_blind_debuff_hand = Blind.debuff_hand
+function Blind:debuff_hand(cards, hand, handname, check)
+    local vanilla = _orig_blind_debuff_hand(self, cards, hand, handname, check)
+    if vanilla then return vanilla end
 
-    if self ~= G.hand then return end
-    if not self.highlighted or #self.highlighted == 0 then return end
-    if G.boss_throw_hand then return end -- boss is already warning; don't stomp
+    local infant = joker_in_play("j_fool_sommers_infant")
+    local child  = joker_in_play("j_fool_sommers_child")
+    if not (infant or child) then return false end
 
-    local stage_key, stage_label
-    if joker_in_play("j_fool_sommers_infant") then
-        stage_key, stage_label = "j_fool_sommers_infant", "and William will take his leave!"
-    elseif joker_in_play("j_fool_sommers_child") then
-        stage_key, stage_label = "j_fool_sommers_child", "No Queen of Hearts"
-    else
-        return
-    end
+    local scoring = hand and hand[handname] and hand[handname][1]
+    if not scoring then return false end
+    if scoring_hand_has_qoh(scoring) then return false end
 
-    local text, _, poker_hands = G.FUNCS.get_poker_hand_info(self.highlighted)
-    if text == 'NULL' then return end
-    local scoring = poker_hands[text] and poker_hands[text][1]
-    if not scoring then return end
-    if scoring_hand_has_qoh(scoring) then return end
-
-    G.boss_throw_hand = true
-    SMODS.debuff_text = stage_label
+    SMODS.debuff_text = infant and "and William will take his leave!" or "No Queen of Hearts"
+    local target_key = infant and "j_fool_sommers_infant" or "j_fool_sommers_child"
     for _, j in pairs(G.jokers.cards) do
-        if j.config and j.config.center and j.config.center.key == stage_key then
+        if j.config and j.config.center and j.config.center.key == target_key then
             SMODS.hand_debuff_source = j
             break
         end
     end
+    return true
 end
 
 
