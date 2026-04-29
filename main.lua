@@ -89,6 +89,44 @@ end
 local function infant_in_play() return joker_in_play("j_fool_foole_infant") end
 local function child_in_play()  return joker_in_play("j_fool_foole_child")  end
 
+-- When a Standard pack opens, force one card to be a Queen of Hearts.
+-- Called from each Sommers stage's calculate via context.open_booster.
+-- The conversion is deferred via the event manager because pack cards
+-- are populated in an event with delay 1.3 that hasn't run yet at the
+-- moment context.open_booster fires; we schedule slightly later so
+-- G.pack_cards.cards is non-empty when we reach in.
+--
+-- We also early-return if any card in the pack is already Q♥ — this
+-- both handles the multi-Sommers-in-jokers case (only one conversion
+-- per pack) and avoids stomping a naturally-rolled Q♥.
+local function force_qoh_in_standard_pack(context)
+    if not context.open_booster then return end
+    if context.blueprint then return end
+    if not (context.card and context.card.ability
+            and context.card.ability.name
+            and context.card.ability.name:find('Standard')) then return end
+
+    G.E_MANAGER:add_event(Event({
+        trigger = 'after',
+        delay = 1.4 * math.sqrt(G.SETTINGS.GAMESPEED),
+        func = function()
+            if not (G.pack_cards and G.pack_cards.cards) then return true end
+            for _, pc in ipairs(G.pack_cards.cards) do
+                if pc:get_id() == 12 and pc:is_suit("Hearts", true) then
+                    return true
+                end
+            end
+            for _, pc in ipairs(G.pack_cards.cards) do
+                if pc:get_id() ~= 12 or not pc:is_suit("Hearts", true) then
+                    SMODS.change_base(pc, "Hearts", "Queen")
+                    break
+                end
+            end
+            return true
+        end
+    }))
+end
+
 -- Mod-level set_debuff hook. SMODS calls this for every card whose debuff
 -- state is being evaluated (Card:set_debuff in card.lua:674). Returning
 -- true forces the card debuffed; the standard X / dim shaders then render
@@ -327,6 +365,8 @@ SMODS.Joker {
     end,
 
     calculate = function(self, card, context)
+        force_qoh_in_standard_pack(context)
+
         if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
             card.ability.extra.can_graduate = true
             start_juicing_if_ready(card)
@@ -448,6 +488,8 @@ SMODS.Joker {
     end,
 
     calculate = function(self, card, context)
+        force_qoh_in_standard_pack(context)
+
         if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
             card.ability.extra.can_graduate = true
             start_juicing_if_ready(card)
@@ -520,6 +562,8 @@ SMODS.Joker {
     in_pool = function(self, args) return false end,
 
     calculate = function(self, card, context)
+        force_qoh_in_standard_pack(context)
+
         if context.before
            and context.cardarea == G.jokers
            and not context.blueprint then
