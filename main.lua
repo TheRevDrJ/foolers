@@ -397,9 +397,9 @@ SMODS.Joker {
     loc_txt = {
         name = "Sommers (Child)",
         text = {
-            "Scoring hands need a",
-            "{C:hearts}Queen of Hearts{}",
-            "{C:attention}-1{} hand size per {C:hearts}Q♥{} in deck"
+            "Need a {C:hearts}Queen of Hearts{} to score",
+            "{C:attention}-1{} hand size per",
+            "{C:hearts}Queen of Hearts{} in deck"
         }
     },
     atlas = "sommers_child",
