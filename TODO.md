@@ -10,7 +10,7 @@ Things to do, in no particular order. Move items between sections as they progre
 
 - **Easter egg: all three Foole stages in jokers at once.** Trigger detection is trivial (`joker_in_play` for all three keys in any add_to_deck or calculate hook). The "what happens" is open — Jonathan to author. Could be a flash, a hidden joker, a quiet message, a sound, anything. Robinett-style: discovery is the reward. By the time it fires the run is soft-locked anyway (every card debuffed by Infant∪Child union), so no need to make it mechanically powerful.
 
-- **Shop spawns Q♥ while Sommers is in jokers.** Inspired by Magic Trick voucher (`v_magic_trick`), which sets `G.GAME.playing_card_rate = 4`. Two implementation paths: (a) enable the rate while Sommers present (random playing cards, no Q♥ guarantee), or (b) monkey-patch `create_card_for_shop` to force the playing-card slot to be specifically Q♥, optionally with a Red Seal. (b) fits Sommers' "obsessed with the queen" theme better. Park until Jonathan confirms he wants it — Stage 1 already has Strength/Death/packs/Cryptid as Q♥ acquisition paths.
+- **Shop spawns Q♥ while Sommers is in jokers** (replaced by pack-Q♥ guarantee at commit pending — same flavor, less invasive). Keeping in TODO in case Jonathan wants both shop AND pack-spawning eventually. Inspired by Magic Trick voucher (`v_magic_trick`), which sets `G.GAME.playing_card_rate = 4`.
 
 ## Future companions (placeholder)
 

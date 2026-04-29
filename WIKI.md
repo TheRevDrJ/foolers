@@ -113,6 +113,9 @@ Before he shows up, look for ways to acquire Queen of Hearts cards:
 
 A vanilla deck has *one* Q♥. That's not enough for sustained Stage 1 play — you need redundancy.
 
+### Once Sommers is in your jokers
+While any Sommers stage (Infant, Child, Adult) is in your joker row, **the first card of every Standard pack is guaranteed to be a Queen of Hearts**. Parallels the Telescope voucher's "first Planet is most-played hand" mechanic — Sommers brings his obsession with him. The forced Q♥ keeps any seal or edition that the pack's RNG roll produced, so it can show up with a Red Seal, Polychrome, etc. on top of the rank+suit guarantee. Other slots in the pack are still random.
+
 ### With Infant: stay alive
 Every scoring hand must include a Queen of Hearts in the *scoring* portion (kickers don't count). If your played hand resolves with no Q♥ contributing to the poker hand type, **Sommers (Infant) is destroyed** — you've permanently lost the joker until you find another in a shop.
 
