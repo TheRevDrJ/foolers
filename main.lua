@@ -306,7 +306,7 @@ SMODS.Joker {
         name = "Sommers (Infant)",
         text = {
             "Hands without a {C:hearts}Queen of Hearts{}",
-            "{C:attention}destroy this joker{}",
+            "{C:attention}will not score and destroy this joker{}",
             "{C:inactive}Sell after defeating a boss",
             "{C:inactive}blind to grow up..."
         }

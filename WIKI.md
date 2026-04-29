@@ -94,7 +94,7 @@ Henry VIII's primary court fool, paired with Jane Foole. Same three-stage shape 
 
 | Stage | Rarity | Cost | Sell | In shop pool? | Effect |
 |-------|--------|------|------|---------------|--------|
-| Sommers (Infant) | Common | $4 | $2 | ✅ | Every scoring hand must include a Queen of Hearts. Otherwise, **this joker is destroyed.** |
+| Sommers (Infant) | Common | $4 | $2 | ✅ | Every scoring hand must include a Queen of Hearts. Otherwise, **the hand will not score and this joker is destroyed.** |
 | Sommers (Child) | Uncommon | $6 | $3 | ❌ (graduation only) | Scoring hands still need a Queen of Hearts. Hand size is reduced by 1 per Queen of Hearts in your deck (minimum 1) |
 | Sommers (Adult) | Rare | $8 | $4 | ❌ (graduation only) | Every scored card becomes a Queen of Hearts with Polychrome, Steel, and a Red Seal |
 
@@ -117,13 +117,15 @@ A vanilla deck has *one* Q♥. That's not enough for sustained Stage 1 play — 
 While any Sommers stage (Infant, Child, Adult) is in your joker row, **the first card of every Standard pack is guaranteed to be a Queen of Hearts**. Parallels the Telescope voucher's "first Planet is most-played hand" mechanic — Sommers brings his obsession with him. The forced Q♥ keeps any seal or edition that the pack's RNG roll produced, so it can show up with a Red Seal, Polychrome, etc. on top of the rank+suit guarantee. Other slots in the pack are still random.
 
 ### With Infant: stay alive
-Every scoring hand must include a Queen of Hearts in the *scoring* portion (kickers don't count). If your played hand resolves with no Q♥ contributing to the poker hand type, **Sommers (Infant) is destroyed** — you've permanently lost the joker until you find another in a shop.
+Every scoring hand must include a Queen of Hearts in the *scoring* portion (kickers don't count). If your played hand resolves with no Q♥ contributing to the poker hand type, **the hand fails to score and Sommers (Infant) is destroyed** — both punishments fire at once, and the joker is permanently lost until you find another in a shop.
 
 The dance:
 1. Discard until you have a Q♥ in your draw
 2. Play her in a hand type where she actually scores (Pair of Queens, Flush of Hearts, Straight including her)
-3. Sometimes you'll exhaust your discards before drawing her — you have to play *some* hand or the round fails. If that hand has no scoring Q♥, Sommers dies.
+3. Sometimes you'll exhaust your discards before drawing her — you have to play *some* hand or the round fails. If that hand has no scoring Q♥, you lose the round AND Sommers.
 4. Survive to a boss blind, sell to graduate
+
+The pre-play UI warns you: highlighted cards that wouldn't score under the rule trigger a "Will Not Score / and William will take his leave!" warning above the play area, with Sommers' sprite jiggling to mark the source. Vanilla boss-blind warning machinery, repointed.
 
 ### With Child: pay the over-commitment tax
 Same Q♥-required rule, but the consequence softens — failing it yields a non-scoring hand, not a dead joker. The new pressure is mechanical rather than binary: **hand size is reduced by 1 for every Queen of Hearts in your deck.** Minimum hand size is 1 so you can always play High Card.
