@@ -131,14 +131,8 @@ local function force_card_in_standard_pack(context, suit, rank, rank_id)
                 end
             end
             for _, pc in ipairs(G.pack_cards.cards) do
-                -- Skip cards with no suit (Stone et al.) — change_base
-                -- would set the rank/suit data but the Stone enhancement
-                -- masks the visual and is_suit returns false on them, so
-                -- the card wouldn't satisfy Sommers' Q♥-in-scoring rule
-                -- anyway. Also skip the other character's champion.
                 if (pc:get_id() ~= rank_id or not pc:is_suit(suit, true))
-                   and not is_champion_card(pc)
-                   and not SMODS.has_no_suit(pc) then
+                   and not is_champion_card(pc) then
                     SMODS.change_base(pc, suit, rank)
                     break
                 end
