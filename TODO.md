@@ -4,12 +4,7 @@ Things to do, in no particular order. Move items between sections as they progre
 
 ## Active
 
-- **William Sommers joker set** — second character. Three-stage progression like Foole. Stage 1 forces skips on Small/Big blinds (auto-call `G.FUNCS.skip_blind`, with a non-modal `attention_text` flash + `play_sound('cancel')` for feedback). Graduation gate is **two** boss-blind defeats, not one — prevents grabbing him right before a boss to dodge the punishment. No comfort buffs (no doubled tags etc.); player takes whatever skip rewards the seed deals.
-  - Decide stages 2 and 3 effects
-  - Source/commission art for three stages
-  - Decide rarities (Common / Uncommon / Rare again? or different shape?)
-  - Implementation: monkey-patch `G.FUNCS.select_blind` for the force-skip
-  - Lore: pair with Jane Foole as Henry VIII's other court fool
+- **Playtest William Sommers** — all three stages shipped at commit `968ecf0`. Stage 1 destroys the joker on Q♥-less scoring hand; Stage 2 soft-fails plus shrinks hand size by Q♥ count; Stage 3 transmutes scored cards to Steel+Polychrome+Red Seal Q♥. Verify destruction timing, hand-size update responsiveness, and the Steel-held-mult endgame loop with Shoot the Moon.
 
 ## Deferred (waiting for inspiration / right moment)
 
@@ -25,4 +20,5 @@ Things to do, in no particular order. Move items between sections as they progre
 - Mod icon
 - Rarity demotion (Common/Uncommon/Rare) to avoid Legendary RNG conflicts
 - Child phase inversion (KoCs debuffed instead of retriggered)
-- WIKI.md
+- WIKI.md (both characters)
+- William Sommers three-stage progression (built around Queen of Hearts; Stage 1 joker-destruction-on-failure, Stage 2 hand-size shrink, Stage 3 Steel+Polychrome+Red Seal transmute)
