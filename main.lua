@@ -89,17 +89,31 @@ end
 local function infant_in_play() return joker_in_play("j_fool_foole_infant") end
 local function child_in_play()  return joker_in_play("j_fool_foole_child")  end
 
--- When a Standard pack opens, force one card to be a Queen of Hearts.
--- Called from each Sommers stage's calculate via context.open_booster.
--- The conversion is deferred via the event manager because pack cards
--- are populated in an event with delay 1.3 that hasn't run yet at the
--- moment context.open_booster fires; we schedule slightly later so
--- G.pack_cards.cards is non-empty when we reach in.
+-- True if a card matches either character's "champion" — King of Clubs
+-- (Foole) or Queen of Hearts (Sommers). Used by force_card_in_standard_pack
+-- to avoid overwriting the other character's converted card when both
+-- characters are in the joker row at the same time.
+local function is_champion_card(pc)
+    return (pc:get_id() == 13 and pc:is_suit("Clubs",  true))
+        or (pc:get_id() == 12 and pc:is_suit("Hearts", true))
+end
+
+-- When a Standard pack opens, force one card in the pack to be the
+-- caller's champion (suit, rank, rank_id). Called from each Foole or
+-- Sommers stage's calculate via context.open_booster.
 --
--- We also early-return if any card in the pack is already Q♥ — this
--- both handles the multi-Sommers-in-jokers case (only one conversion
--- per pack) and avoids stomping a naturally-rolled Q♥.
-local function force_qoh_in_standard_pack(context)
+-- Deferred via event manager: pack cards are populated in an event with
+-- delay 1.3 that hasn't run yet at the moment context.open_booster
+-- fires; we schedule slightly later so G.pack_cards.cards is non-empty.
+--
+-- Two early-returns:
+--   1. If the pack already contains a card matching this champion,
+--      do nothing — handles multi-stage double-firing and respects
+--      naturally-rolled champion cards.
+--   2. We skip converting any card that's a champion of the *other*
+--      character, so a player with Foole and Sommers both in play gets
+--      one K♣ and one Q♥ in the pack, not one stomping the other.
+local function force_card_in_standard_pack(context, suit, rank, rank_id)
     if not context.open_booster then return end
     if context.blueprint then return end
     if not (context.card and context.card.ability
@@ -112,13 +126,14 @@ local function force_qoh_in_standard_pack(context)
         func = function()
             if not (G.pack_cards and G.pack_cards.cards) then return true end
             for _, pc in ipairs(G.pack_cards.cards) do
-                if pc:get_id() == 12 and pc:is_suit("Hearts", true) then
+                if pc:get_id() == rank_id and pc:is_suit(suit, true) then
                     return true
                 end
             end
             for _, pc in ipairs(G.pack_cards.cards) do
-                if pc:get_id() ~= 12 or not pc:is_suit("Hearts", true) then
-                    SMODS.change_base(pc, "Hearts", "Queen")
+                if (pc:get_id() ~= rank_id or not pc:is_suit(suit, true))
+                   and not is_champion_card(pc) then
+                    SMODS.change_base(pc, suit, rank)
                     break
                 end
             end
@@ -215,6 +230,8 @@ SMODS.Joker {
     end,
 
     calculate = function(self, card, context)
+        force_card_in_standard_pack(context, "Clubs", "King", 13)
+
         if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
             card.ability.extra.can_graduate = true
             start_juicing_if_ready(card)
@@ -270,6 +287,8 @@ SMODS.Joker {
     end,
 
     calculate = function(self, card, context)
+        force_card_in_standard_pack(context, "Clubs", "King", 13)
+
         if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
             card.ability.extra.can_graduate = true
             start_juicing_if_ready(card)
@@ -314,6 +333,8 @@ SMODS.Joker {
     in_pool = function(self, args) return false end,
 
     calculate = function(self, card, context)
+        force_card_in_standard_pack(context, "Clubs", "King", 13)
+
         if context.before
            and context.cardarea == G.jokers
            and not context.blueprint then
@@ -365,7 +386,7 @@ SMODS.Joker {
     end,
 
     calculate = function(self, card, context)
-        force_qoh_in_standard_pack(context)
+        force_card_in_standard_pack(context, "Hearts", "Queen", 12)
 
         if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
             card.ability.extra.can_graduate = true
@@ -488,7 +509,7 @@ SMODS.Joker {
     end,
 
     calculate = function(self, card, context)
-        force_qoh_in_standard_pack(context)
+        force_card_in_standard_pack(context, "Hearts", "Queen", 12)
 
         if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
             card.ability.extra.can_graduate = true
@@ -562,7 +583,7 @@ SMODS.Joker {
     in_pool = function(self, args) return false end,
 
     calculate = function(self, card, context)
-        force_qoh_in_standard_pack(context)
+        force_card_in_standard_pack(context, "Hearts", "Queen", 12)
 
         if context.before
            and context.cardarea == G.jokers
