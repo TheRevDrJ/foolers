@@ -333,21 +333,47 @@ SMODS.Joker {
             return { message = "Ready!", colour = G.C.GOLD, card = card }
         end
 
+        -- Q♥-less hand: debuff every scoring card so the hand doesn't
+        -- score, AND mark each so context.after can clear them and trigger
+        -- our destruction. Doing the destroy in context.after lets us
+        -- clean up the debuff state first; if we destroyed Sommers in
+        -- context.before, the after hook wouldn't fire and the cards
+        -- would stay debuffed into next round.
         if context.before
            and context.cardarea == G.jokers
            and not context.blueprint then
             if not scoring_hand_has_qoh(context.scoring_hand) then
+                for _, played_card in ipairs(context.scoring_hand) do
+                    played_card:set_debuff(true)
+                    played_card.sommers_infant_debuff = true
+                end
+                return {
+                    message = "I take my leave!",
+                    colour = G.C.RED,
+                    card = card
+                }
+            end
+        end
+
+        if context.after
+           and context.cardarea == G.jokers
+           and not context.blueprint
+           and context.scoring_hand then
+            local marked = false
+            for _, played_card in ipairs(context.scoring_hand) do
+                if played_card.sommers_infant_debuff then
+                    played_card:set_debuff(false)
+                    played_card.sommers_infant_debuff = nil
+                    marked = true
+                end
+            end
+            if marked then
                 G.E_MANAGER:add_event(Event({
                     func = function()
                         SMODS.destroy_cards({card})
                         return true
                     end
                 }))
-                return {
-                    message = "I take my leave!",
-                    colour = G.C.RED,
-                    card = card
-                }
             end
         end
 
@@ -541,7 +567,7 @@ function CardArea:parse_highlighted()
 
     local stage_key, stage_label
     if joker_in_play("j_fool_sommers_infant") then
-        stage_key, stage_label = "j_fool_sommers_infant", "William will take his leave!"
+        stage_key, stage_label = "j_fool_sommers_infant", "and William will take his leave!"
     elseif joker_in_play("j_fool_sommers_child") then
         stage_key, stage_label = "j_fool_sommers_child", "No Queen of Hearts"
     else
