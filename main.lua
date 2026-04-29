@@ -18,6 +18,9 @@ SMODS.Atlas {
 SMODS.Atlas { key = "foole_infant", path = "j_foole_infant.png", px = 71, py = 95 }
 SMODS.Atlas { key = "foole_child",  path = "j_foole_child.png",  px = 71, py = 95 }
 SMODS.Atlas { key = "foole",        path = "j_foole.png",        px = 71, py = 95 }
+SMODS.Atlas { key = "sommers_infant", path = "j_sommers_infant.png", px = 71, py = 95 }
+SMODS.Atlas { key = "sommers_child",  path = "j_sommers_child.png",  px = 71, py = 95 }
+SMODS.Atlas { key = "sommers",        path = "j_sommers.png",        px = 71, py = 95 }
 
 
 -- =============================================================================
@@ -106,6 +109,33 @@ SMODS.current_mod.set_debuff = function(card)
     local is_koc = card:get_id() == 13 and card:is_suit("Clubs", true)
     if infant_in_play() and not is_koc then return true end
     if child_in_play()  and is_koc     then return true end
+    return false
+end
+
+-- Count of every Queen of Hearts currently in the player's playing cards
+-- (deck, hand, play, discard). Wild Q and Smeared-equivalent Q♦ count
+-- via Card:is_suit. Sommers (Child) reads this each frame to size the
+-- hand-shrink effect.
+local function count_q_hearts_in_deck()
+    if not G.playing_cards then return 0 end
+    local n = 0
+    for _, c in pairs(G.playing_cards) do
+        if c:get_id() == 12 and c:is_suit("Hearts", true) then
+            n = n + 1
+        end
+    end
+    return n
+end
+
+-- True if any card contributing to the poker hand type (the actual
+-- scoring portion, kickers excluded) is a Queen of Hearts.
+local function scoring_hand_has_qoh(scoring_hand)
+    if not scoring_hand then return false end
+    for _, c in ipairs(scoring_hand) do
+        if c:get_id() == 12 and c:is_suit("Hearts", true) then
+            return true
+        end
+    end
     return false
 end
 
@@ -266,6 +296,224 @@ SMODS.Joker {
 
 
 -- =============================================================================
+-- Sommers Stage 1: William Sommers (Infant). Every scoring hand must
+-- contain a Queen of Hearts, or this joker is destroyed permanently
+-- (rebuyable from shops since Common rarity).
+-- =============================================================================
+SMODS.Joker {
+    key = "sommers_infant",
+    loc_txt = {
+        name = "Sommers (Infant)",
+        text = {
+            "Hands without a {C:hearts}Queen of Hearts{}",
+            "{C:attention}destroy this joker{}",
+            "{C:inactive}Sell after defeating a boss",
+            "{C:inactive}blind to grow up..."
+        }
+    },
+    atlas = "sommers_infant",
+    pos = { x = 0, y = 0 },
+    rarity = 1,
+    cost = 4,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = false,
+    perishable_compat = false,
+    config = { extra = { can_graduate = false } },
+
+    add_to_deck = function(self, card, from_debuff)
+        if not from_debuff then start_juicing_if_ready(card) end
+    end,
+
+    calculate = function(self, card, context)
+        if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
+            card.ability.extra.can_graduate = true
+            start_juicing_if_ready(card)
+            return { message = "Ready!", colour = G.C.GOLD, card = card }
+        end
+
+        if context.before
+           and context.cardarea == G.jokers
+           and not context.blueprint then
+            if not scoring_hand_has_qoh(context.scoring_hand) then
+                G.E_MANAGER:add_event(Event({
+                    func = function()
+                        SMODS.destroy_cards({card})
+                        return true
+                    end
+                }))
+                return {
+                    message = "I take my leave!",
+                    colour = G.C.RED,
+                    card = card
+                }
+            end
+        end
+
+        if context.selling_self
+           and not context.blueprint
+           and card.ability.extra.can_graduate then
+            graduate_to("j_fool_sommers_child")
+            return nil, true
+        end
+    end
+}
+
+
+-- =============================================================================
+-- Sommers Stage 2: William Sommers (Child). Same Q♥-required rule, but
+-- failure is soft (no scoring instead of joker death). Hand size shrinks
+-- by 1 per Q♥ in the deck (min 1) — the over-commitment tax.
+-- =============================================================================
+SMODS.Joker {
+    key = "sommers_child",
+    loc_txt = {
+        name = "Sommers (Child)",
+        text = {
+            "Scoring hands need a",
+            "{C:hearts}Queen of Hearts{}",
+            "{C:attention}-1{} hand size per {C:hearts}Q♥{} in deck"
+        }
+    },
+    atlas = "sommers_child",
+    pos = { x = 0, y = 0 },
+    rarity = 2,
+    cost = 6,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = false,
+    perishable_compat = false,
+    config = { extra = { can_graduate = false, applied_reduction = 0 } },
+
+    in_pool = function(self, args) return false end,
+
+    add_to_deck = function(self, card, from_debuff)
+        if not from_debuff then start_juicing_if_ready(card) end
+    end,
+
+    -- On removal, restore whatever hand-size we took. Otherwise selling
+    -- Sommers Child to graduate would leave the player permanently
+    -- short-handed.
+    remove_from_deck = function(self, card, from_debuff)
+        if not from_debuff
+           and card.ability.extra.applied_reduction
+           and card.ability.extra.applied_reduction > 0
+           and G.hand then
+            G.hand:change_size(card.ability.extra.applied_reduction)
+            card.ability.extra.applied_reduction = 0
+        end
+    end,
+
+    -- Update fires every frame. Recompute the desired hand-size reduction
+    -- from current Q♥ count and apply only the delta. Floors hand size
+    -- at 1 so High Card is always playable.
+    update = function(self, card, dt)
+        if not G.hand or not G.playing_cards or not G.GAME or not G.GAME.starting_params then return end
+        local q_count = count_q_hearts_in_deck()
+        local default_hand_size = G.GAME.starting_params.hand_size or 8
+        local target = math.min(q_count, math.max(0, default_hand_size - 1))
+        local current = card.ability.extra.applied_reduction or 0
+        if target ~= current then
+            G.hand:change_size(-(target - current))
+            card.ability.extra.applied_reduction = target
+        end
+    end,
+
+    calculate = function(self, card, context)
+        if defeated_boss_this_round(context) and not card.ability.extra.can_graduate then
+            card.ability.extra.can_graduate = true
+            start_juicing_if_ready(card)
+            return { message = "Ready!", colour = G.C.GOLD, card = card }
+        end
+
+        -- Soft failure: debuff every scoring card so nothing scores. The
+        -- visual is brief (only across the eval pass) but the score
+        -- behavior is the point — joker survives.
+        if context.before
+           and context.cardarea == G.jokers
+           and not context.blueprint then
+            if not scoring_hand_has_qoh(context.scoring_hand) then
+                for _, played_card in ipairs(context.scoring_hand) do
+                    played_card:set_debuff(true)
+                    played_card.sommers_child_debuff = true
+                end
+            end
+        end
+
+        if context.after
+           and context.cardarea == G.jokers
+           and not context.blueprint
+           and context.scoring_hand then
+            for _, played_card in ipairs(context.scoring_hand) do
+                if played_card.sommers_child_debuff then
+                    played_card:set_debuff(false)
+                    played_card.sommers_child_debuff = nil
+                end
+            end
+        end
+
+        if context.selling_self
+           and not context.blueprint
+           and card.ability.extra.can_graduate then
+            graduate_to("j_fool_sommers")
+            return nil, true
+        end
+    end
+}
+
+
+-- =============================================================================
+-- Sommers Stage 3: William Sommers (Adult). Every scored card becomes a
+-- Queen of Hearts with Polychrome, Steel, and a Red Seal. Steel doesn't
+-- break — deck stays full forever, and held mult is the new scaling
+-- axis. Inverts Foole Adult's "play big" by rewarding small hands.
+-- =============================================================================
+SMODS.Joker {
+    key = "sommers",
+    loc_txt = {
+        name = "Sommers",
+        text = {
+            "Every scored card becomes a",
+            "{C:hearts}Queen of Hearts{} with",
+            "{C:dark_edition}Polychrome{}, {C:attention}Steel{},",
+            "and a {C:red}Red Seal{}"
+        }
+    },
+    atlas = "sommers",
+    pos = { x = 0, y = 0 },
+    rarity = 3,
+    cost = 8,
+    unlocked = true,
+    discovered = true,
+    blueprint_compat = false,
+    eternal_compat = true,
+    perishable_compat = true,
+
+    in_pool = function(self, args) return false end,
+
+    calculate = function(self, card, context)
+        if context.before
+           and context.cardarea == G.jokers
+           and not context.blueprint then
+            for _, played_card in ipairs(context.scoring_hand) do
+                SMODS.change_base(played_card, 'Hearts', 'Queen')
+                played_card:set_ability(G.P_CENTERS.m_steel)
+                played_card:set_edition({ polychrome = true }, true)
+                played_card:set_seal('Red', true)
+            end
+            return {
+                message = "Indeed!",
+                colour = G.C.GOLD,
+                card = card
+            }
+        end
+    end
+}
+
+
+-- =============================================================================
 -- JokerDisplay integration. No-op if the JokerDisplay mod isn't loaded.
 -- Mirrors vanilla Invisible Joker's pattern (Definitions[j_invisible]):
 -- shows "(0/1)" in inactive grey before boss defeat, "(Active!)" in green
@@ -292,6 +540,8 @@ if JokerDisplay and JokerDisplay.Definitions then
             end,
         }
     end
-    JokerDisplay.Definitions["j_fool_foole_infant"] = progression_display()
-    JokerDisplay.Definitions["j_fool_foole_child"] = progression_display()
+    JokerDisplay.Definitions["j_fool_foole_infant"]   = progression_display()
+    JokerDisplay.Definitions["j_fool_foole_child"]    = progression_display()
+    JokerDisplay.Definitions["j_fool_sommers_infant"] = progression_display()
+    JokerDisplay.Definitions["j_fool_sommers_child"]  = progression_display()
 end
