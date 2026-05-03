@@ -314,8 +314,8 @@ SMODS.Joker {
     loc_txt = {
         name = "Foole",
         text = {
-            "Every scored card becomes a",
-            "{C:clubs}King of Clubs{} with",
+            "Every card played and scored",
+            "becomes a {C:clubs}King of Clubs{} with",
             "{C:dark_edition}Polychrome{}, {C:attention}Glass{},",
             "and a {C:red}Red Seal{}"
         }
@@ -530,8 +530,8 @@ SMODS.Joker {
     loc_txt = {
         name = "Sommers",
         text = {
-            "Every scored card becomes a",
-            "{C:hearts}Queen of Hearts{} with",
+            "Every card played and scored",
+            "becomes a {C:hearts}Queen of Hearts{} with",
             "{C:dark_edition}Polychrome{}, {C:attention}Steel{},",
             "and a {C:red}Red Seal{}"
         }
